@@ -223,3 +223,22 @@ topFoodplot %>%
                      panel.grid = element_blank(),
                      legend.title = element_blank())
 
+# Forecasting
+fao_reduced <- fao[fao$Element == 'Food', ]
+glimpse(fao_reduced)
+long_data <- fao_reduced %>% gather(Year, Production, Y1961:Y2013)
+glimpse(long_data)
+forecast_data <- long_data %>% 
+  group_by(Year) %>% 
+  summarise(sum_production = sum(Production)/1000)
+
+forecast_data_ts <- ts(forecast_data$sum_production, start = 1961, end = 2013, frequency = 1)
+glimpse(forecast_data_1)
+
+
+library(forecast)
+# Automated forecasting using an exponential model
+fit <-  forecast(forecast_data_ts, h = 37, level = c(80,95)) # h - number of periods for forecasting
+#level - confidence level for prediction intervals.
+summary(fit)
+plot(forecast(forecast_data_ts, h = 37), main = 'Forecast of the Food production by 2050', xlab = 'Year', ylab = 'Food priduction, million tonnes')
