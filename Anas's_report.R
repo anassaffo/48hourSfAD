@@ -252,67 +252,24 @@ top_feed2 <-fao_sel %>%
 plot_grid(top_feed1,top_feed2, align = "h")
 
 ### NELE
+## top produced Items:
+# Food:
+fao %>% group_by(Item) %>%filter(Element == 'Food')%>% 
+    summarise(TFO = sum(Total)) %>% ungroup()%>%mutate(pct = prop.table(TFO)*100)%>%
+    top_n(10, wt = pct)%>%
+    ggplot(aes(x = reorder(Item, pct), y = pct)) + 
+    geom_bar(stat = 'identity', fill = "lightblue", aes(color = I('black')), size = 0.1) + coord_flip()+
+    geom_text(aes(label = sprintf("%.2f%%", pct)), hjust = 1.2,
+              vjust = -0.5, size = 3)+ theme_bw()+ xlab("Food Item") + ylab("Food Item production 1961 - 2013")
 
-# Top 10 food and feed items becoming more popular over the years ----
-# converting year values from character strings to integers
-fao_gath$Year <- str_replace(fao_gath$Year, "[Y]", "")
-fao_gath$Year <- as.integer(fao_gath$Year)
-head(fao_gath)
-# amount of food and feed produced per year
-yearlyProdTotals <- fao_gath %>%
-    group_by(Area_Abb, Year, Element) %>%
-    summarise(
-        element_total = sum(Production, na.rm=TRUE)
-    )  %>%
-    group_by(Year, Element) %>%
-    summarise(
-        total_prod = sum(element_total, na.rm=TRUE)
-    )
-#  total amount for each item food and feed per year
-itemTotals <- fao_gath %>%
-    group_by(Item, Year, Element) %>%
-    summarise(
-        element_total = sum(Production, na.rm=TRUE)
-    )
-# join itemTotals and yealyProdTotals
-itemComp <- left_join(itemTotals, yearlyProdTotals, by = c("Year", "Element"))
-# percentage for each item
-itemComp <- itemComp %>%
-    mutate(
-        percent_of_total = 100*(element_total/total_prod)
-    )
-# create percentage distribution for 1061 and 2013
-itemPct2013 <- (itemComp %>%
-                    filter(Year == 2013, Element == "Food"))[, c("Item", "percent_of_total")]
-itemPct1961 <- (itemComp %>%
-                    filter(Year == 1961, Element == "Food"))[, c("Item", "percent_of_total")]
-# calculate change from 1961 to 2013
-itemPctChange <- itemPct1961
-itemPctChange$percent_of_total <- itemPct2013$percent_of_total - itemPct1961$percent_of_total
-# plot top 10 items increased in market share from 1961 to 2013
-item_ord <- arrange(itemPctChange, desc(percent_of_total))
-item_top10 <- item_ord[1:10,]
-item_low10 <- item_ord[105:115,]
-item_top10 %>%
-    ggplot() +
-    geom_bar(aes(x = reorder(Item, percent_of_total, sum), y = percent_of_total, fill = percent_of_total), stat = "identity") +
-    theme(text = element_text(size=6)) +
-    xlab("Items") +
-    ylab("Percentage Increase in Market Share") +
-    ggtitle(label = "Top Ten Increases in Item Market Share from 1961 to 2013") +
-    guides(fill = FALSE) +
-    coord_flip()
-# plot top 10 items decreased in market share from 1961 to 2013
-item_low10 %>%
-    ggplot() +
-    geom_bar(aes(x = reorder(Item, percent_of_total, sum), y = percent_of_total, fill = percent_of_total), stat = "identity") +
-    theme(text = element_text(size=6)) +
-    xlab("Items") +
-    ylab("Percent Decreasee in Market Share") +
-    ggtitle("Top Ten Decreases in Item Market Share from 1961 to 2013") +
-    guides(fill = FALSE) +
-    coord_flip()
-
+# Feed:
+fao %>% group_by(Item) %>%filter(Element == 'Feed')%>% 
+    summarise(TFO = sum(Total)) %>% ungroup()%>%mutate(pct = prop.table(TFO)*100)%>%
+    top_n(10, wt = pct)%>%
+    ggplot(aes(x = reorder(Item, pct), y = pct)) + 
+    geom_bar(stat = 'identity', fill = "lightblue", aes(color = I('black')), size = 0.1) + coord_flip()+
+    geom_text(aes(label = sprintf("%.2f%%", pct)), hjust = 1.2,
+              vjust = -0.5, size = 3)+ theme_bw()+ xlab("Feed Item") + ylab("Feed Item production 1961 - 2013")
 
 # Forecasting
 fao[is.na(fao)] <- 0
