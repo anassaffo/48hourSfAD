@@ -43,7 +43,14 @@ str(cont_fao)
 # adding the continent column:
 fao <- fao %>% add_column(continent = cont_fao) 
 
-# selecting the important variables:
+# selecting the important variables and renaming columns:
+colnames(fao)[1] <- "Area_Abb"
+colnames(fao)[2] <- "Area_Code"
+colnames(fao)[3] <- "Area"
+colnames(fao)[4] <- "Item_Code"
+colnames(fao)[5] <- "Item"
+colnames(fao)[6] <- "Element_Code"
+colnames(fao)[7] <- "Element"
 fao_sel <- fao[,-c(2,4,6,8,9,10)]
 
 # assigning NA continents to correct continents
