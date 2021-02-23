@@ -246,6 +246,7 @@ top_feed2 <-fao_sel %>%
 plot_grid(top_feed1,top_feed2, align = "h")
 
 # Forecasting
+fao[is.na(fao)] <- 0
 fao_reduced <- fao[fao$Element == 'Food', ]
 glimpse(fao_reduced)
 long_data <- fao_reduced %>% gather(Year, Production, Y1961:Y2013)
