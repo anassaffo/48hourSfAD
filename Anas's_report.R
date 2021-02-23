@@ -153,6 +153,7 @@ fao_sel %>%
     ylab("Number of missing fields")
 
 # the trend for total feed and food production over the years
+options(repr.plot.width=10, repr.plot.height=4)
 fao_sel %>% 
     gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
     group_by(Element,Year)%>% # to see production development for feed and food per year
@@ -165,63 +166,84 @@ fao_sel %>%
     ylab( "Production (Million Tonnes)")+
     ggtitle ( "Total Food/Feed production 1961 - 2013")
 
-# to see the largest feed producer, top 6 countries:
-fao_gath <- fao_sel %>% 
-    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
-    group_by(Area,Element)
-
-topFeed <- fao_gath%>%
-    filter(Element == "Feed")  %>% # selecting the feed only
-    summarise(totalprod = sum(Production)/1000)%>% # getting the total production for feed
-    ungroup()%>% 
-    top_n(6,totalprod)
-
-# show the top 6 countries for feed production in descending order
-topFeed %>% select(Area,totalprod) %>% arrange(desc(totalprod))
-
-# plotting the top 6 feed producing countries across the years
-topFeedplot <-fao_sel%>% 
-    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
-    group_by(Area,Year,Element) %>%
-    filter(Element == "Feed" & Area %in% topFeed$Area) %>%
-    summarise(totalprod = sum(Production)/1000)
-
-topFeedplot %>% 
-    ggplot(aes(Year,totalprod,group = Area, color = Area))+  
-    geom_line(size = 1) +
-    ylab( "Production (Millon Tonnes)")+
-    ggtitle ( "Top  6 Feed Producers 1961 - 2013")+
-    theme_bw()+theme(axis.text.x = element_text(size=6, angle=90),
-                     plot.title = element_text(hjust = 0.5),
-                     panel.grid = element_blank(),
-                     legend.title = element_blank()) 
-
-# to see the largest food producer, top 6 countries: 
+# the top 10 food producers
 topFood <- fao_gath%>%
     filter(Element == "Food")  %>% # selecting the food only
     summarise(totalprod = sum(Production)/1000)%>% # getting the total production for food
     ungroup()%>% 
-    top_n(6,totalprod)
+    top_n(10,totalprod)
 
-# show the top 6 countries for food production in descending order
-topFood %>% select(Area,totalprod) %>% arrange(desc(totalprod))
+# to see the top 10 countries for food production:
+topFood %>% select(Area_Abb,totalprod) %>% arrange(desc(totalprod)) # in millions of tonns
 
-# plotting the top 6 food producing countries across the years
-topFoodplot <-fao_sel%>% 
+# using bar plot to plot top food producers:
+options(repr.plot.width=10, repr.plot.height=4)
+fao <- mutate(fao, Total=apply(fao[11:63], 1, sum, na.rm = T))
+fao <- mutate(fao, last5=apply(fao[58:63], 1, sum, na.rm = T))
+top_food1 <- fao %>% group_by(Area_Abb, Element) %>%filter(Element == 'Food')%>% 
+    summarise(TFO = sum(Total)) %>% ungroup()%>%mutate(pct = prop.table(TFO)*100)%>%
+    top_n(10, wt = pct) %>% 
+    ggplot(aes(x = reorder(Area_Abb, -pct), y = pct)) + 
+    geom_bar(stat = 'identity', fill = "lightgreen", aes(color = I('black')), size = 0.1) + 
+    geom_text(aes(label = sprintf("%.2f%%", pct)), hjust = 0.5,
+              vjust = -0.5, size = 3)+ theme_bw()+ xlab("Country") + ylab("Top Food production 1961 - 2013") 
+
+# line plot for the top 10 food producing countries across the years:
+fao_gath <- fao_sel %>% 
     gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
-    group_by(Area,Year,Element) %>%
-    filter(Element == "Food" & Area %in% topFeed$Area) %>%
-    summarise(totalprod = sum(Production)/1000)
+    group_by(Area_Abb,Element)
 
-topFoodplot %>% 
-    ggplot(aes(Year,totalprod,group = Area, color = Area))+  
+    
+top_food2 <-fao_sel %>% 
+    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
+    group_by(Area_Abb,Year,Element) %>%
+    filter(Element == "Food" & Area_Abb %in% topFood$Area_Abb) %>%
+    summarise(totalprod = sum(Production)/1000) %>% 
+    ggplot(aes(Year,totalprod,group = Area_Abb, color = Area_Abb))+  
     geom_line(size = 1) +
     ylab( "Production (Millon Tonnes)")+
-    ggtitle ( "Top  6 Food Producers 1961 - 2013")+
+    theme_bw()+theme(axis.text.x = element_text(size=6, angle=90),
+               plot.title = element_text(hjust = 0.5),
+               panel.grid = element_blank(),
+              legend.title = element_blank())
+
+plot_grid(top_food1,top_food2, align = "h")
+
+
+# the top 10 food producers
+topFeed <- fao_gath%>%
+    filter(Element == "Feed")  %>% # selecting the food only
+    summarise(totalprod = sum(Production)/1000)%>% # getting the total production for food
+    ungroup()%>% 
+    top_n(10,totalprod)
+
+# to see the top 10 countries for food production:
+topFeed %>% select(Area_Abb,totalprod) %>% arrange(desc(totalprod))
+
+# using bar plot to plot top feed producers:
+options(repr.plot.width=10, repr.plot.height=4)
+top_feed1 <- fao %>% group_by(Area_Abb, Element) %>%filter(Element == 'Feed')%>% 
+    summarise(TFO = sum(Total)) %>% ungroup()%>%mutate(pct = prop.table(TFO)*100)%>%
+    top_n(10, wt = pct) %>%
+    ggplot(aes(x = reorder(Area_Abb, -pct), y = pct)) + 
+    geom_bar(stat = 'identity', fill = "lightgreen", aes(color = I('black')), size = 0.1) + 
+    geom_text(aes(label = sprintf("%.2f%%", pct)), hjust = 0.5,
+              vjust = -0.5, size = 3)+ theme_bw()+ xlab("Country") + ylab("Top Feed production 1961 - 2013")
+
+top_feed2 <-fao_sel %>% 
+    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
+    group_by(Area_Abb,Year,Element) %>%
+    filter(Element == "Feed" & Area_Abb %in% topFood$Area_Abb) %>%
+    summarise(totalprod = sum(Production)/1000) %>% 
+    ggplot(aes(Year,totalprod,group = Area_Abb, color = Area_Abb))+  
+    geom_line(size = 1) +
+    ylab( "Production (Millon Tonnes)")+
     theme_bw()+theme(axis.text.x = element_text(size=6, angle=90),
                      plot.title = element_text(hjust = 0.5),
                      panel.grid = element_blank(),
                      legend.title = element_blank())
+
+plot_grid(top_feed1,top_feed2, align = "h")
 
 # Forecasting
 fao_reduced <- fao[fao$Element == 'Food', ]
