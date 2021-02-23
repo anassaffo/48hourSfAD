@@ -147,6 +147,9 @@ diet_group <- grouped_fao %>%
 
 ### ANAS
 
+fao_gath <- fao_sel %>% 
+    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
+    group_by(Area_Abb,Element)
 # to see how many missing values there are in each year:
 fao_sel %>% 
     gather(Year, Production, Y1961:Y2013) %>% 
@@ -197,11 +200,6 @@ top_food1 <- fao %>% group_by(Area_Abb, Element) %>%filter(Element == 'Food')%>%
               vjust = -0.5, size = 3)+ theme_bw()+ xlab("Country") + ylab("Top Food production 1961 - 2013") 
 
 # line plot for the top 10 food producing countries across the years:
-fao_gath <- fao_sel %>% 
-    gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
-    group_by(Area_Abb,Element)
-
-    
 top_food2 <-fao_sel %>% 
     gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
     group_by(Area_Abb,Year,Element) %>%
@@ -241,7 +239,7 @@ top_feed1 <- fao %>% group_by(Area_Abb, Element) %>%filter(Element == 'Feed')%>%
 top_feed2 <-fao_sel %>% 
     gather(Year, Production, Y1961:Y2013, na.rm = TRUE) %>% 
     group_by(Area_Abb,Year,Element) %>%
-    filter(Element == "Feed" & Area_Abb %in% topFood$Area_Abb) %>%
+    filter(Element == "Feed" & Area_Abb %in% topFeed$Area_Abb) %>%
     summarise(totalprod = sum(Production)/1000) %>% 
     ggplot(aes(Year,totalprod,group = Area_Abb, color = Area_Abb))+  
     geom_line(size = 1) +
